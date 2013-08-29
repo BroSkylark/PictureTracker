@@ -2,39 +2,37 @@
 #define __TRACKER_H
 
 #include "include.h"
+#include "tag.h"
 
-struct meta_tag
-{
-	int id;
-	int lvl;
-};
+#define META_NAME_SIZE 16
 
 typedef struct __image_meta
 {
 	int valid;
-	struct meta_tag *tags;
+	char **paths;
+	M_TAG *tags;
 	int tc;
-	char name[16];
+	char name[META_NAME_SIZE];
 } I_M;
-
-typedef struct __tag
-{
-	int id;
-	char name[64];
-} TAG;
 
 typedef struct __tracker
 {
 	char *profile;
-	TAG *tags;
+	TAG root;
 	I_M *meta;
-	int tc, mc;
+	int mc;
+	int autoC;
 } TRACKER;
 
 void TRACKER_init(TRACKER*);
-void TRACKER_import(TRACKER*, const char *);
-int TRACKER_read(TRACKER*, const char *);
-int TRACKER_flush(TRACKER*);
+void TRACKER_import(TRACKER*, const char *, const char *);
+void TRACKER_addTag(TRACKER*, const char *);
+void TRACKER_tagImage(TRACKER*, int, const char *);
+void TRACKER_favImage(TRACKER*, int);
+void TRACKER_listTags(TRACKER*);
+void TRACKER_listImages(TRACKER*);
+void TRACKER_read(TRACKER*, const char *);
+void TRACKER_flush(TRACKER*);
 void TRACKER_dispose(TRACKER*);
 
 #endif
