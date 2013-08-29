@@ -66,6 +66,68 @@ void TRACKER_import(TRACKER *this, const char *source_dir, const char *target_di
 	}
 }
 
+void TRACKER_reimport(TRACKER *this, const char *dir)
+{
+	struct dirent *dp;
+	DIR *dfd;
+
+ 	if((dfd = opendir(dir)) == NULL)
+	{
+		fprintf(stderr, "ERR: Can't open %s\n", dir);
+		exit(1);
+	}
+	
+	char filename[128];
+	
+	printf("Import started ...\n");
+
+	while((dp = readdir(dfd)) != NULL)
+	{
+		struct stat stbuf;
+		
+		sprintf(filename, "%s/%s", dir, dp->d_name);
+		
+		if(stat(filename, &stbuf) == -1)
+		{
+			printf("Unable to stat file: %s\n", filename);
+			continue;
+		}
+
+		if((stbuf.st_mode & S_IFMT) == S_IFDIR) // if is directory
+		{
+			continue;
+		}
+		else
+		{
+			int m = -1;
+			strcpy(filename, dp->d_name);
+			sscanf(filename, "%i", &m);
+			
+			if(m < 0)
+			{
+				fprintf(stderr, "ERR: Imvalid filename for reimport: '%s'.\nAbort.\n", filename);
+				exit(1);
+			}
+			
+			if(m >= this->mc)
+			{
+				int i = this->mc;
+				this->mc = m + 1;
+				this->meta = realloc(this->meta, this->mc * sizeof(I_M));
+				
+				for(; i < this->mc ; i++)
+				{
+					I_M_init(&this->meta[i]);
+				}
+			}
+			
+			strcpy(this->meta[m].name, filename);
+			
+			printf("> Reimported '%s' as image #%d.\n", filename, m);
+		}
+	}
+}
+
 void TRACKER_addTag(TRACKER *this, const char *tag)
 {
 	TAG_addTag(&this->root, tag, this->autoC);

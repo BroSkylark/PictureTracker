@@ -26,6 +26,7 @@ typedef struct __tracker
 
 void TRACKER_init(TRACKER*);
 void TRACKER_import(TRACKER*, const char *, const char *);
+void TRACKER_reimport(TRACKER*, const char *);
 void TRACKER_addTag(TRACKER*, const char *);
 void TRACKER_tagImage(TRACKER*, int, const char *);
 void TRACKER_favImage(TRACKER*, int);

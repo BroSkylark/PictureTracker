@@ -6,6 +6,7 @@ const char * const DEFAULT[] = {"--profile=test"};
 const int DEF_C = 1;
 const char *A_PROFILE = "profile";
 const char *A_IMPORT = "import";
+const char *A_REIMPORT = "reimport";
 const char *A_AUTOCAT = "auto-generation";
 const char *A_LISTT = "list-tags";
 const char *A_LISTI = "list-images";
@@ -50,6 +51,11 @@ int main(int argc, const char * const argv[])
 	{
 		printf("$ Trying to import images...\n");
 		TRACKER_import(&t, DIR_IMPORT, DIR_IMAGES);
+	}
+	else if(GETA(A_REIMPORT))
+	{
+		printf("$ Trying to reimport images...\n");
+		TRACKER_reimport(&t, DIR_IMAGES);
 	}
 	
 	if(GETA(A_AUTOCAT))
