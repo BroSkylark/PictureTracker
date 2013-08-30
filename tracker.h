@@ -3,17 +3,7 @@
 
 #include "include.h"
 #include "tag.h"
-
-#define META_NAME_SIZE 16
-
-typedef struct __image_meta
-{
-	int valid;
-	char **paths;
-	M_TAG *tags;
-	int tc;
-	char name[META_NAME_SIZE];
-} I_M;
+#include "evaluate.h"
 
 typedef struct __tracker
 {
@@ -25,6 +15,7 @@ typedef struct __tracker
 } TRACKER;
 
 void TRACKER_init(TRACKER*);
+void TRACKER_search(TRACKER*, const char *);
 void TRACKER_import(TRACKER*, const char *, const char *);
 void TRACKER_reimport(TRACKER*, const char *);
 void TRACKER_addTag(TRACKER*, const char *);

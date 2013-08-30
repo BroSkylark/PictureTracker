@@ -8,6 +8,7 @@ const char *A_PROFILE = "profile";
 const char *A_IMPORT = "import";
 const char *A_REIMPORT = "reimport";
 const char *A_AUTOCAT = "auto-generation";
+const char *A_SEARCH = "search";
 const char *A_LISTT = "list-tags";
 const char *A_LISTI = "list-images";
 const char *A_NEWTAG = "new-tag";
@@ -29,7 +30,7 @@ int main(int argc, const char * const argv[])
 	ARG_parse(&args, DEF_C, DEFAULT); 
 	ARG_parse(&args, argc - 1, argv + 1);
 	
-	printf("Done parsing.\n\n");
+//	printf("Done parsing.\n\n");
 	
 	const char *path = ARG_getArg(&args, A_PROFILE);
 	const char *fn = ".profile";
@@ -45,16 +46,16 @@ int main(int argc, const char * const argv[])
 	
 	#define GETA(a) ARG_getArg(&args, a)
 	
-	printf("$$$ Evaluating...\n");
+//	printf("$$$ Evaluating...\n");
 	
 	if(GETA(A_IMPORT))
 	{
-		printf("$ Trying to import images...\n");
+//		printf("$ Trying to import images...\n");
 		TRACKER_import(&t, DIR_IMPORT, DIR_IMAGES);
 	}
 	else if(GETA(A_REIMPORT))
 	{
-		printf("$ Trying to reimport images...\n");
+//		printf("$ Trying to reimport images...\n");
 		TRACKER_reimport(&t, DIR_IMAGES);
 	}
 	
@@ -63,21 +64,26 @@ int main(int argc, const char * const argv[])
 		t.autoC = 1;
 	}
 	
-	if(GETA(A_LISTT))
+	if(GETA(A_SEARCH))
 	{
-		printf("$ Trying to list tags...\n");
+//		printf("$ Trying to search ...\n");
+		TRACKER_search(&t, GETA(A_SEARCH));
+	}
+	else if(GETA(A_LISTT))
+	{
+//		printf("$ Trying to list tags...\n");
 		TRACKER_listTags(&t);
 	}
 	else if(GETA(A_LISTI))
 	{
-		printf("$ Trying to list image meta...\n");
+//		printf("$ Trying to list image meta...\n");
 		TRACKER_listImages(&t);
 	}
 	else if(GETA(A_FAV))
 	{
 		int id;
 		sscanf(GETA(A_IMAGE), "%i", &id);
-		printf("$ Trying to favor image ...\n");
+//		printf("$ Trying to favor image ...\n");
 		TRACKER_favImage(&t, id);
 	}
 	else if(GETA(A_DELTAG))
@@ -95,7 +101,7 @@ int main(int argc, const char * const argv[])
 	{
 		int id;
 		sscanf(GETA(A_IMAGE), "%i", &id);
-		printf("$ Trying to tag image...\n");
+//		printf("$ Trying to tag image...\n");
 		TRACKER_tagImage(&t, id, GETA(A_TAG));
 	}
 	else if(GETA(A_REMTAG))
@@ -107,11 +113,11 @@ int main(int argc, const char * const argv[])
 	}
 	else if(GETA(A_NEWTAG))
 	{
-		printf("$ Trying to add new tag...\n");
+//		printf("$ Trying to add new tag...\n");
 		TRACKER_addTag(&t, GETA(A_TAG));
 	}
 	
-	printf("$$$ Done evaluating.\n");
+//	printf("$$$ Done evaluating.\n");
 	
 	#undef GETA
 	

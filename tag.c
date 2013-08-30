@@ -229,3 +229,86 @@ M_TAG *TAG_evaluatePart(TAG *this, const char *str, M_TAG *tags, int *l)
 	return tags;
 }
 
+char **addString(char **src, char *line, int *size)
+{
+	int l = *size;
+	
+	src = realloc(src, ++l * sizeof(char *));
+	src[l - 1] = strdup(line);
+	
+	*size = l;
+	
+	return src;
+}
+
+char **expand(TAG *this, const char *str, int *size, char **tmp, char *path)
+{
+	char buf[1024];
+	
+	if(*str == '\0')
+	{
+		return addString(tmp, path, size);
+	}
+	
+	if(*str == '.')
+	{
+		M_TAG *t = TAG_evaluateAbs(this, str, NULL);
+		
+		if(t == NULL) return tmp;
+		
+		free(t);
+		
+		strcpy(buf, path);
+		strcat(buf, str);
+		
+		return addString(tmp, buf, size);
+	}
+	
+	char name[TAG_NAME_SIZE];
+	strcpyv(name, str, '.');
+	
+	int i;
+	for(i = 0 ; i < this->tc ; i++)
+	{
+		if(strcmp(this->tags[i].name, name) == 0)
+		{
+			strcpy(buf, path);
+			strcat(buf, ".");
+			strcat(buf, name);
+			tmp = expand(&this->tags[i], str + strlen(name), size, tmp, buf);
+		}
+		else
+		{
+			strcpy(buf, path);
+			strcat(buf, ".");
+			strcat(buf, this->tags[i].name);
+			tmp = expand(&this->tags[i], str, size, tmp, buf);
+		}
+	}
+	
+	return tmp;
+}
+
+char **TAG_expand(TAG *this, const char *str, int *size)
+{
+	char eos = '\0';
+	
+	return expand(this, str, size, NULL, &eos);
+}
+
+int M_TAG_compIntArr(M_TAG *m1, M_TAG *m2)
+{
+	if(m2->c < m1->c) return 0;
+	
+	int c = m1->c;
+	
+	int i;
+	for(i = 0 ; i < c ; i++)
+	{
+		if(m1->path[i] != m2->path[i]) return 0;
+	}
+	
+	return 1;
+}
+
+

@@ -48,11 +48,9 @@ void ARG_parse(ARG *this, int argc, const char * const *args)
 	{
 		if(args[i][0] == '-' && args[i][1] == '-')
 		{
-			printf("Processing argument '%s' ...\n", args[i]);
 			char name[256], value[256];
 			
 			strcpyv(name, args[i] + 2, '=');
-			printf("\t> name:  '%s'\n", name);
 			
 			if(*(args[i] + 2 + strlen(name)) == '=')
 			{
@@ -63,8 +61,6 @@ void ARG_parse(ARG *this, int argc, const char * const *args)
 				value[0] = '1';
 				value[1] = '\0';
 			}
-			
-			printf("\t> value: '%s'\n", value);
 			
 			ARG_set(this, name, value);
 		}

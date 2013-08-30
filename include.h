@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
 void strcpyv(char *, const char *, char);
 int checkNCreateDir(const char *);
 void merge(char *, const char *, const char *);

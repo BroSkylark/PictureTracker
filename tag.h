@@ -27,8 +27,11 @@ void TAG_addTag(TAG*, const char *, int);
 int TAG_removeTag(TAG*, const char *, int);
 void TAG_listTags(TAG*, int);
 void TAG_dispose(TAG*);
+
+int M_TAG_compIntArr(M_TAG *, M_TAG *);
 M_TAG *TAG_evaluateAbs(TAG*, const char *, M_TAG *);
 M_TAG *TAG_evaluatePart(TAG*, const char *, M_TAG *, int *);
+char **TAG_expand(TAG*, const char *, int *);
 
 #endif
 

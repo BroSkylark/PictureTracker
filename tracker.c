@@ -21,6 +21,41 @@ void TRACKER_init(TRACKER *this)
 	this->root.name[0] = '.';
 }
 
+void TRACKER_search(TRACKER *this, const char *str)
+{
+	int res[64];
+	int c = 0;
+	
+	E_TREE tree;
+	E_TREE_init(&tree);
+	E_TREE_evaluateInput(&tree, str, &this->root);
+//	E_TREE_print(&tree);
+	E_TREE_evaluateTags(&tree, &this->root);
+//	E_TREE_print(&tree);
+	
+	int i;
+	for(i = 0 ; i < this->mc ; i++)
+	{
+//		printf("# Evaluating meta #%d\n", i);
+		E_TREE t = E_TREE_copy(&tree);
+		E_TREE_evaluateMeta(&t, &this->meta[i]);
+//		E_TREE_print(&t);
+
+		if(E_TREE_evaluateFinal(&t))
+		{
+			res[c++] = i;
+		}
+		E_TREE_dispose(&t);
+	}
+	
+//	printf("\n\n\n'%s' found in %d images:\n", str, c);
+	
+	for(i = 0 ; i < c ; i++)
+	{
+		printf("%s\n", this->meta[res[i]].name);
+	}
+}
+
 void TRACKER_import(TRACKER *this, const char *source_dir, const char *target_dir)
 {
 	struct dirent *dp;
@@ -34,7 +69,7 @@ void TRACKER_import(TRACKER *this, const char *source_dir, const char *target_di
 	
 	char filename_old[128], filename_new[128];
 	
-	printf("Import started ...\n");
+//	printf("Import started ...\n");
 
 	while((dp = readdir(dfd)) != NULL)
 	{
@@ -44,7 +79,7 @@ void TRACKER_import(TRACKER *this, const char *source_dir, const char *target_di
 		
 		if(stat(filename_old, &stbuf) == -1)
 		{
-			printf("Unable to stat file: %s\n", filename_old);
+			fprintf(stderr, "ERR: Unable to stat file: %s\n", filename_old);
 			continue;
 		}
 
@@ -61,7 +96,7 @@ void TRACKER_import(TRACKER *this, const char *source_dir, const char *target_di
 			copyFile(filename_old, filename_new);
 			remove(filename_old);
 			
-			printf("> Moved '%s' to '%s'.\n", filename_old, filename_new);
+//			printf("> Moved '%s' to '%s'.\n", filename_old, filename_new);
 		}
 	}
 }
@@ -79,7 +114,7 @@ void TRACKER_reimport(TRACKER *this, const char *dir)
 	
 	char filename[128];
 	
-	printf("Import started ...\n");
+//	printf("Import started ...\n");
 
 	while((dp = readdir(dfd)) != NULL)
 	{
@@ -89,7 +124,7 @@ void TRACKER_reimport(TRACKER *this, const char *dir)
 		
 		if(stat(filename, &stbuf) == -1)
 		{
-			printf("Unable to stat file: %s\n", filename);
+			fprintf(stderr, "Unable to stat file: %s\n", filename);
 			continue;
 		}
 
@@ -123,7 +158,7 @@ void TRACKER_reimport(TRACKER *this, const char *dir)
 			
 			strcpy(this->meta[m].name, filename);
 			
-			printf("> Reimported '%s' as image #%d.\n", filename, m);
+//			printf("> Reimported '%s' as image #%d.\n", filename, m);
 		}
 	}
 }
