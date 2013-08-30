@@ -7,7 +7,7 @@ const int DEF_C = 1;
 const char *A_PROFILE = "profile";
 const char *A_IMPORT = "import";
 const char *A_REIMPORT = "reimport";
-const char *A_AUTOCAT = "auto-generation";
+const char *A_AUTOGEN = "auto-generation";
 const char *A_SEARCH = "search";
 const char *A_LISTT = "list-tags";
 const char *A_LISTI = "list-images";
@@ -59,11 +59,6 @@ int main(int argc, const char * const argv[])
 		TRACKER_reimport(&t, DIR_IMAGES);
 	}
 	
-	if(GETA(A_AUTOCAT))
-	{
-		t.autoC = 1;
-	}
-	
 	if(GETA(A_SEARCH))
 	{
 //		printf("$ Trying to search ...\n");
@@ -77,7 +72,16 @@ int main(int argc, const char * const argv[])
 	else if(GETA(A_LISTI))
 	{
 //		printf("$ Trying to list image meta...\n");
-		TRACKER_listImages(&t);
+		if(GETA(A_IMAGE))
+		{
+			int id;
+			sscanf(GETA(A_IMAGE), "%i", &id);
+			TRACKER_listImage(&t, id);
+		}
+		else
+		{
+			TRACKER_listImages(&t);
+		}
 	}
 	else if(GETA(A_FAV))
 	{
@@ -88,14 +92,7 @@ int main(int argc, const char * const argv[])
 	}
 	else if(GETA(A_DELTAG))
 	{
-		if(!GETA(A_OVERRIDE))
-		{
-			fprintf(stderr, "ERR: To permanently delete a tag the '--%s' option has to be supplied.\n", A_OVERRIDE);
-		}
-		else
-		{
-//			TRACKER_deleteTag(&t, GETA(A_CAT), GETA(A_TAG));
-		}
+		TRACKER_deleteTag(&t, GETA(A_TAG), GETA(A_OVERRIDE) ? 1 : 0);
 	}
 	else if(GETA(A_ADDTAG))
 	{
@@ -108,13 +105,13 @@ int main(int argc, const char * const argv[])
 	{
 		int id;
 		sscanf(GETA(A_IMAGE), "%i", &id);
-		printf("$ Trying to remove tag from image...\n");
-//		TRACKER_untagImage(&t, id, GETA(A_CAT), GETA(A_TAG));
+//		printf("$ Trying to remove tag from image...\n");
+		TRACKER_untagImage(&t, id, GETA(A_TAG));
 	}
 	else if(GETA(A_NEWTAG))
 	{
 //		printf("$ Trying to add new tag...\n");
-		TRACKER_addTag(&t, GETA(A_TAG));
+		TRACKER_addTag(&t, GETA(A_TAG), GETA(A_AUTOGEN) ? 1 : 0);
 	}
 	
 //	printf("$$$ Done evaluating.\n");

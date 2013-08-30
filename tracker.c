@@ -3,6 +3,7 @@
 void I_M_init(I_M*);
 void I_M_fav(I_M*, TAG *);
 void I_M_reconstruct(I_M*, TAG*);
+int I_M_weigh(I_M*, TAG *);
 void I_M_list(I_M*, TAG *);
 void I_M_read(I_M*, FILE *);
 void I_M_write(I_M*, FILE *);
@@ -15,7 +16,6 @@ void TRACKER_init(TRACKER *this)
 	this->mc      = 0;
 	this->meta    = NULL;
 	this->profile = NULL;
-	this->autoC   = 0;
 	
 	TAG_init(&this->root);
 	this->root.name[0] = '.';
@@ -23,7 +23,7 @@ void TRACKER_init(TRACKER *this)
 
 void TRACKER_search(TRACKER *this, const char *str)
 {
-	int res[64];
+	int res[4096], weigh[4096];
 	int c = 0;
 	
 	E_TREE tree;
@@ -33,7 +33,7 @@ void TRACKER_search(TRACKER *this, const char *str)
 	E_TREE_evaluateTags(&tree, &this->root);
 //	E_TREE_print(&tree);
 	
-	int i;
+	int i, j, tmp;
 	for(i = 0 ; i < this->mc ; i++)
 	{
 //		printf("# Evaluating meta #%d\n", i);
@@ -43,16 +43,34 @@ void TRACKER_search(TRACKER *this, const char *str)
 
 		if(E_TREE_evaluateFinal(&t))
 		{
-			res[c++] = i;
+			res[c] = i;
+			weigh[c++] = I_M_weigh(&this->meta[i], &this->root);
 		}
 		E_TREE_dispose(&t);
+	}
+	
+	for(i = 0 ; i < c ; i++)
+	{
+		for(j = i + 1 ; j < c ; j++)
+		{
+			if(weigh[i] < weigh[j])
+			{
+				tmp = weigh[i];
+				weigh[i] = weigh[j];
+				weigh[j] = tmp;
+				
+				tmp = res[i];
+				res[i] = res[j];
+				res[j] = tmp;
+			}
+		}
 	}
 	
 //	printf("\n\n\n'%s' found in %d images:\n", str, c);
 	
 	for(i = 0 ; i < c ; i++)
 	{
-		printf("%s\n", this->meta[res[i]].name);
+		printf("%s (%d)\n", this->meta[res[i]].name, weigh[i]);
 	}
 }
 
@@ -163,9 +181,24 @@ void TRACKER_reimport(TRACKER *this, const char *dir)
 	}
 }
 
-void TRACKER_addTag(TRACKER *this, const char *tag)
+void TRACKER_addTag(TRACKER *this, const char *tag, int autogenerate)
 {
-	TAG_addTag(&this->root, tag, this->autoC);
+	TAG_addTag(&this->root, tag, autogenerate);
+}
+
+void TRACKER_deleteTag(TRACKER *this, const char *tag, int override)
+{
+	switch(TAG_removeTag(&this->root, tag, override))
+	{
+		case -1:
+			fprintf(stderr, "ERR(%d):\nThere is no such tag.\n", ERR_NO_SUCH_TAG);
+			break;
+		case 0:
+			fprintf(stderr, "ERR(%d):\nThe tag has Subtags. Use the '--override' option to force deletion.\n", ERR_NEED_OVERRIDE);
+			break;
+		case 1:
+			break;
+	}
 }
 
 void TRACKER_tagImage(TRACKER *this, int image, const char *tag)
@@ -174,7 +207,7 @@ void TRACKER_tagImage(TRACKER *this, int image, const char *tag)
 	
 	if(t == NULL)
 	{
-		fprintf(stderr, "ERR: No tag found for '%s'\nAbort.\n", tag);
+		fprintf(stderr, "ERR(%d):\nNo tag found for '%s'\nAbort.\n", ERR_NO_SUCH_TAG, tag);
 		return;
 	}
 	
@@ -187,6 +220,48 @@ void TRACKER_tagImage(TRACKER *this, int image, const char *tag)
 	free(t);
 }
 
+void TRACKER_untagImage(TRACKER *this, int image, const char *tag)
+{
+	I_M *m = &this->meta[image];
+	
+	int i;
+	for(i = 0 ; i < m->tc ; i++)
+	{
+		if(strcmp(m->paths[i], tag) == 0)
+		{
+			if(--m->tc - i > 0)
+			{
+				memmove(m->paths + i, m->paths + i + 1, (m->tc - i) * sizeof(char *));
+			}
+			
+			if(m->tc > 0)
+			{
+				m->paths = realloc(m->paths, m->tc * sizeof(char *));
+			}
+			else
+			{
+				free(m->paths);
+				m->paths = NULL;
+			}
+			
+			return;
+		}
+	}
+	
+	M_TAG *mt = TAG_evaluateAbs(&this->root, tag, NULL);
+	
+	if(mt != NULL)
+	{
+		free(mt);
+		
+		fprintf(stderr, "ERR(%d):\nImage has no such tag.\n", ERR_NOT_TAGGED);
+	}
+	else
+	{
+		fprintf(stderr, "ERR(%d):\nTag doesn't exist.\n", ERR_NO_SUCH_TAG);
+	}
+}
+
 void TRACKER_favImage(TRACKER *this, int image)
 {
 	I_M_fav(&this->meta[image], &this->root);
@@ -197,6 +272,11 @@ void TRACKER_listTags(TRACKER *this)
 	printf("> Tags:\n");
 	TAG_listTags(&this->root, 2);
 	printf("\n");
+}
+
+void TRACKER_listImage(TRACKER *this, int image)
+{
+	I_M_list(&this->meta[image], &this->root);
 }
 
 void TRACKER_listImages(TRACKER *this)
@@ -319,6 +399,8 @@ void I_M_fav(I_M *this, TAG *root)
 			tag->favs++;
 		}
 	}
+	
+	this->favs++;
 }
 
 void I_M_reconstruct(I_M *this, TAG *tag)
@@ -343,9 +425,28 @@ void I_M_printList(M_TAG *this, TAG *root)
 	}
 }
 
+int I_M_weigh(I_M *this, TAG *root)
+{
+	int v = this->favs << 4;
+	
+	int i, j;
+	for(i = 0 ; i < this->tc ; i++)
+	{
+		TAG *tag = root;
+		
+		for(j = 0 ; j < this->tags[i].c ; j++)
+		{
+			tag = &tag->tags[this->tags[i].path[j]];
+			v += tag->favs;
+		}
+	}
+	
+	return v;
+}
+
 void I_M_list(I_M *this, TAG *root)
 {
-	printf("Image '%s':\n", this->name);
+	printf("Image '%s' (%d):\n", this->name, this->favs);
 	
 	int i;
 	for(i = 0 ; i < this->tc ; i++)

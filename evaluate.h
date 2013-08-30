@@ -21,7 +21,7 @@ typedef struct __image_meta
 	int valid;
 	char **paths;
 	M_TAG *tags;
-	int tc;
+	int tc, favs;
 	char name[META_NAME_SIZE];
 } I_M;
 

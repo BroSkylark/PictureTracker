@@ -11,6 +11,10 @@
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
+#define ERR_NO_SUCH_TAG 0
+#define ERR_NEED_OVERRIDE 1
+#define ERR_NOT_TAGGED 2
+
 void strcpyv(char *, const char *, char);
 int checkNCreateDir(const char *);
 void merge(char *, const char *, const char *);
